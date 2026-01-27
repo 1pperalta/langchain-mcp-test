@@ -20,11 +20,6 @@ class Config:
     OPENROUTER_API_KEY: str = os.getenv('OPENROUTER_API_KEY', '')
     LLM_MODEL: str = os.getenv('LLM_MODEL', 'openai/gpt-3.5-turbo')
     
-    DEFAULT_EXCHANGE_RATES: dict[str, float] = {
-        'COP': 1.0,
-        'USD': 4000.0,
-    }
-    
     @classmethod
     def validate_google_credentials(cls) -> bool:
         """Check if Google credentials are configured."""
@@ -39,6 +34,20 @@ class Config:
     def validate_llm_config(cls) -> bool:
         """Check if LLM configuration is complete."""
         return bool(cls.OPENROUTER_API_KEY)
+    
+    @classmethod
+    def get_exchange_rates(cls, use_cache: bool = True) -> dict[str, float]:
+        """
+        Get current exchange rates.
+        
+        Args:
+            use_cache: If True, uses cached rate (refreshes hourly)
+        
+        Returns:
+            Dictionary with exchange rates (COP base)
+        """
+        from utils.exchange_rates import get_exchange_rates
+        return get_exchange_rates(use_cache=use_cache)
 
 
 config = Config()

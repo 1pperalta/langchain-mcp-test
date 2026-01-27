@@ -35,10 +35,13 @@ langgraph-mcp-test/
 │   └── portfolio_sheets/
 │       ├── sheets_client.py  # Google Sheets API client
 │       └── __init__.py
+├── utils/
+│   └── exchange_rates.py     # Real-time exchange rate utilities
+├── test/
+│   ├── test_models.py        # Model tests
+│   └── test_sheets_client.py # Google Sheets integration tests
 ├── config.py                 # Configuration management
-├── test_sheets_client.py     # Test script
 ├── .env                      # Environment variables (not in git)
-├── .cursorrules              # Project coding standards
 └── requirements.txt          # Python dependencies
 ```
 
@@ -143,7 +146,7 @@ Your Google Sheet should have these columns:
 source .venv/bin/activate
 
 # Run test script
-python test_sheets_client.py
+python test/test_sheets_client.py
 ```
 
 ### First Run (OAuth Authentication)
@@ -223,10 +226,25 @@ allocation = portfolio.allocation_by_platform()
 
 ### Exchange Rates
 
-Default exchange rate (hardcoded in `config.py`):
-- USD to COP: 4000
+The system fetches **real-time USD/COP exchange rates** automatically using a free API (exchangerate-api.com).
 
-Can be customized by passing `exchange_rates` dict to `portfolio.total_value()`.
+**Features:**
+- Automatic rate fetching on first use
+- 1-hour cache to minimize API calls
+- Fallback to default rate (4000) if API fails
+- Free tier: 1500 requests/month
+
+**Manual control:**
+```python
+# Use live rates (default)
+total = portfolio.total_value(use_live_rates=True)
+
+# Use default rate (4000 COP/USD)
+total = portfolio.total_value(use_live_rates=False)
+
+# Use custom rates
+total = portfolio.total_value(exchange_rates={"COP": 1.0, "USD": 3650.0})
+```
 
 ## Development
 
@@ -326,6 +344,6 @@ Built as a learning project for LangChain, MCP, and portfolio management.
 ## Support
 
 For issues or questions, check:
-1. `.cursorrules` - Project coding standards
-2. `test_sheets_client.py` - Example usage
-3. Error messages usually indicate the exact problem
+1. `test/test_sheets_client.py` - Example usage
+2. Error messages usually indicate the exact problem
+3. Google Cloud Console for API and OAuth settings

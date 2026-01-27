@@ -86,19 +86,25 @@ class Portfolio(BaseModel):
             if pos.currency == currency
         )
     
-    def total_value(self, exchange_rates: dict[str, float] | None = None) -> float:
+    def total_value(self, exchange_rates: dict[str, float] | None = None, use_live_rates: bool = True) -> float:
         """
         Calculate total portfolio value in COP.
         
         Args:
             exchange_rates: Optional dict mapping currency codes to COP exchange rates
                           e.g., {"USD": 4000.0} means 1 USD = 4000 COP
+                          If None and use_live_rates=True, fetches real-time rates
+            use_live_rates: If True and exchange_rates is None, fetch live rates (default: True)
         
         Returns:
             Total value in COP
         """
         if exchange_rates is None:
-            exchange_rates = {"COP": 1.0, "USD": 4000.0}
+            if use_live_rates:
+                from utils.exchange_rates import get_exchange_rates
+                exchange_rates = get_exchange_rates()
+            else:
+                exchange_rates = {"COP": 1.0, "USD": 4000.0}
         
         total = 0.0
         for pos in self.positions:
@@ -107,16 +113,19 @@ class Portfolio(BaseModel):
         
         return total
     
-    def allocation_by_platform(self) -> dict[str, float]:
+    def allocation_by_platform(self, use_live_rates: bool = True) -> dict[str, float]:
         """Calculate percentage allocation by platform."""
         if not self.positions:
             return {}
         
-        total = self.total_value()
+        from utils.exchange_rates import get_exchange_rates
+        exchange_rates = get_exchange_rates() if use_live_rates else {"COP": 1.0, "USD": 4000.0}
+        
+        total = self.total_value(exchange_rates=exchange_rates, use_live_rates=False)
         platform_values = {}
         
         for pos in self.positions:
-            rate = 4000.0 if pos.currency == "USD" else 1.0
+            rate = exchange_rates.get(pos.currency, 1.0)
             value = pos.total_value * rate
             platform_values[pos.platform] = platform_values.get(pos.platform, 0.0) + value
         
@@ -125,16 +134,19 @@ class Portfolio(BaseModel):
             for platform, value in platform_values.items()
         }
     
-    def allocation_by_currency(self) -> dict[str, float]:
+    def allocation_by_currency(self, use_live_rates: bool = True) -> dict[str, float]:
         """Calculate percentage allocation by currency."""
         if not self.positions:
             return {}
         
-        total = self.total_value()
+        from utils.exchange_rates import get_exchange_rates
+        exchange_rates = get_exchange_rates() if use_live_rates else {"COP": 1.0, "USD": 4000.0}
+        
+        total = self.total_value(exchange_rates=exchange_rates, use_live_rates=False)
         currency_values = {}
         
         for pos in self.positions:
-            rate = 4000.0 if pos.currency == "USD" else 1.0
+            rate = exchange_rates.get(pos.currency, 1.0)
             value = pos.total_value * rate
             currency_values[pos.currency] = currency_values.get(pos.currency, 0.0) + value
         
@@ -143,16 +155,19 @@ class Portfolio(BaseModel):
             for currency, value in currency_values.items()
         }
     
-    def allocation_by_asset_type(self) -> dict[str, float]:
+    def allocation_by_asset_type(self, use_live_rates: bool = True) -> dict[str, float]:
         """Calculate percentage allocation by asset type."""
         if not self.positions:
             return {}
         
-        total = self.total_value()
+        from utils.exchange_rates import get_exchange_rates
+        exchange_rates = get_exchange_rates() if use_live_rates else {"COP": 1.0, "USD": 4000.0}
+        
+        total = self.total_value(exchange_rates=exchange_rates, use_live_rates=False)
         type_values = {}
         
         for pos in self.positions:
-            rate = 4000.0 if pos.currency == "USD" else 1.0
+            rate = exchange_rates.get(pos.currency, 1.0)
             value = pos.total_value * rate
             type_values[pos.asset_type] = type_values.get(pos.asset_type, 0.0) + value
         
