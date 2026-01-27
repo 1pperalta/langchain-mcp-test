@@ -1,7 +1,6 @@
 """Pydantic models for portfolio data validation and structure."""
 from datetime import date
-from decimal import Decimal
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -11,18 +10,31 @@ class Position(BaseModel):
     
     platform: str = Field(..., min_length=1, description="Investment platform name")
     symbol: str = Field(..., min_length=1, description="Asset symbol or ticker")
-    asset_type: Literal["stock", "etf", "fund", "cash"] = Field(
-        ..., 
+    currency: Literal["COP", "USD"] = Field(..., description="Currency of the position")
+    value: float = Field(..., gt=0, description="Total position value in original currency")
+    
+    asset_type: Optional[Literal["stock", "etf", "fund", "cash"]] = Field(
+        default="fund", 
         description="Type of asset"
     )
-    quantity: float = Field(..., gt=0, description="Number of units held")
-    average_price: float = Field(..., gt=0, description="Average purchase price per unit")
-    currency: Literal["COP", "USD"] = Field(..., description="Currency of the position")
-    purchase_date: date = Field(..., description="Date of purchase")
+    quantity: Optional[float] = Field(
+        default=None,
+        gt=0,
+        description="Number of units held (optional)"
+    )
+    average_price: Optional[float] = Field(
+        default=None,
+        gt=0,
+        description="Average purchase price per unit (optional)"
+    )
+    purchase_date: Optional[date] = Field(
+        default=None,
+        description="Date of purchase (optional)"
+    )
     
-    @field_validator('quantity', 'average_price')
+    @field_validator('value')
     @classmethod
-    def validate_positive_values(cls, v: float) -> float:
+    def validate_positive_value(cls, v: float) -> float:
         if v <= 0:
             raise ValueError('Value must be positive')
         return v
@@ -36,8 +48,10 @@ class Position(BaseModel):
     
     @property
     def total_value(self) -> float:
-        """Calculate total value of this position."""
-        return self.quantity * self.average_price
+        """Get total value of this position."""
+        if self.quantity is not None and self.average_price is not None:
+            return self.quantity * self.average_price
+        return self.value
     
     def to_currency(self, exchange_rate: float = 1.0) -> float:
         """Convert position value to another currency."""
