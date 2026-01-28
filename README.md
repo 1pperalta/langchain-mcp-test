@@ -1,26 +1,43 @@
 # Colombian Portfolio Aggregator
 
-AI-powered portfolio management tool that reads and analyzes investment data from Google Sheets across multiple Colombian platforms (Lulo, DollarApp, Trii, etc.).
+AI-powered portfolio management system that reads and analyzes investment data from Google Sheets across multiple Colombian platforms (Lulo, DollarApp, Trii, etc.) using LangChain and OpenRouter.
 
-## Current Status: MVP (Phase 1)
+## Overview
 
-The MVP successfully reads portfolio data from Google Sheets and provides portfolio analysis capabilities.
+This project provides an intelligent assistant for managing and analyzing personal investment portfolios across multiple Colombian platforms. It combines Google Sheets for data storage, real-time exchange rates, and AI-powered analysis through LangChain agents.
 
 ## Features
 
+### Core Functionality
 - Read portfolio positions from Google Sheets
 - Support for multiple platforms (Lulo, DollarApp, Trii, etc.)
 - Multi-currency support (COP, USD)
+- Real-time USD/COP exchange rate integration
 - Automatic Colombian number format handling (commas in thousands)
-- Portfolio value calculations and aggregations
-- Allocation analysis by platform and currency
 - Secure OAuth authentication with Google
+
+### AI Agent Capabilities
+- Natural language portfolio queries
+- Intelligent tool selection using ReAct pattern
+- Portfolio summary and analysis
+- Allocation breakdown by platform, currency, and asset type
+- Position filtering and search
+- Budget tracking and cost management
+
+### Budget Management
+- Configurable spending limits (total and daily)
+- Automatic usage tracking in JSON format
+- Real-time cost monitoring
+- Warning alerts at 50%, 80%, and 95% usage
+- Detailed usage history and analytics
 
 ## Architecture
 
 ### Tech Stack
 
 - **Python 3.11+**
+- **LangChain** - Agent orchestration and tool management
+- **OpenRouter** - LLM API access (supports multiple models)
 - **Pydantic** - Data validation and modeling
 - **Google Sheets API** - Data source
 - **Google OAuth 2.0** - Secure authentication
@@ -30,19 +47,51 @@ The MVP successfully reads portfolio data from Google Sheets and provides portfo
 ```
 langgraph-mcp-test/
 ├── models/
-│   └── portfolio.py          # Pydantic models for Position and Portfolio
+│   └── portfolio.py              # Pydantic models for Position and Portfolio
 ├── mcp_servers/
 │   └── portfolio_sheets/
-│       ├── sheets_client.py  # Google Sheets API client
+│       ├── sheets_client.py      # Google Sheets API client
 │       └── __init__.py
+├── agent/
+│   ├── llm_client.py            # LangChain + OpenRouter setup
+│   ├── tools.py                  # Portfolio analysis tools
+│   ├── agent.py                  # Main agent orchestrator
+│   └── usage_tracker.py          # Budget tracking system
 ├── utils/
-│   └── exchange_rates.py     # Real-time exchange rate utilities
+│   ├── exchange_rates.py         # Real-time exchange rate utilities
+│   └── __init__.py
 ├── test/
-│   ├── test_models.py        # Model tests
-│   └── test_sheets_client.py # Google Sheets integration tests
-├── config.py                 # Configuration management
-├── .env                      # Environment variables (not in git)
-└── requirements.txt          # Python dependencies
+│   ├── test_models.py            # Model tests
+│   ├── test_sheets_client.py     # Google Sheets integration tests
+│   └── test_agent.py             # Agent functionality tests
+├── cli.py                        # Command-line interface
+├── config.py                     # Configuration management
+├── .env                          # Environment variables (not in git)
+├── usage.json                    # API usage tracking (not in git)
+└── requirements.txt              # Python dependencies
+```
+
+### Agent Architecture
+
+```
+User Question (CLI)
+    ↓
+PortfolioAgent (ReAct Pattern)
+    ↓
+LLM Decision (OpenRouter - gpt-3.5-turbo)
+    ↓
+Tool Selection:
+    - get_portfolio_summary
+    - get_positions
+    - get_allocation_by_platform
+    - get_allocation_by_currency
+    - get_allocation_by_asset_type
+    ↓
+Tool Execution → Data from Google Sheets
+    ↓
+LLM Analysis & Response
+    ↓
+Usage Tracking (JSON)
 ```
 
 ### Data Model
@@ -63,66 +112,67 @@ langgraph-mcp-test/
 ### Prerequisites
 
 - Python 3.11 or higher
-- UV package manager (recommended) or pip
-- Google Cloud Project with Sheets API enabled
-- OAuth 2.0 credentials (Desktop application type)
+- Google Cloud account with Sheets API enabled
+- OpenRouter API account
 
-### Installation
+### 1. Clone and Install Dependencies
 
-1. Clone the repository:
 ```bash
+# Navigate to project directory
 cd "/path/to/langgraph-mcp-test"
+
+# Create virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
 ```
 
-2. Create virtual environment with UV:
-```bash
-uv venv
-source .venv/bin/activate  # On macOS/Linux
-```
+### 2. Google Cloud Setup
 
-3. Install dependencies:
-```bash
-uv pip install -r requirements.txt
-```
-
-4. Configure environment variables:
-```bash
-cp .env.example .env
-```
-
-Edit `.env` and add your credentials:
-```env
-GOOGLE_CLIENT_ID=123456789-abcdefghijklmnopqrstuvwxyz.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=GOCSPX-your_client_secret_here
-PORTFOLIO_SHEET_ID=1abcdefghijklmnopqrstuvwxyz123456789
-```
-
-### Google Cloud Setup
-
-1. **Create Google Cloud Project**:
-   - Go to https://console.cloud.google.com
-   - Create a new project
-
-2. **Enable Google Sheets API**:
-   - Navigate to "APIs & Services" → "Library"
-   - Search for "Google Sheets API"
-   - Click "Enable"
-
-3. **Create OAuth 2.0 Credentials**:
-   - Go to "APIs & Services" → "Credentials"
-   - Click "+ CREATE CREDENTIALS" → "OAuth client ID"
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing one
+3. Enable **Google Sheets API**
+4. Create OAuth 2.0 credentials:
    - Application type: **Desktop app**
-   - Download the credentials JSON
-   - Copy `client_id` and `client_secret` to your `.env` file
+   - Download credentials JSON
+5. Configure OAuth consent screen:
+   - Add your email as test user
+   - Set scopes: `../auth/spreadsheets.readonly`
 
-4. **Configure OAuth Consent Screen**:
-   - Go to "OAuth consent screen"
-   - Set to "Testing" mode
-   - Add yourself as a test user (your email)
+### 3. OpenRouter Setup
 
-### Google Sheet Format
+1. Go to [OpenRouter](https://openrouter.ai/)
+2. Create an account
+3. Add credits ($3-5 recommended for personal use)
+4. Generate API key from [API Keys page](https://openrouter.ai/keys)
+5. Keep Auto Top-Up disabled for budget control
 
-Your Google Sheet should have these columns:
+### 4. Environment Configuration
+
+Copy `.env.example` to `.env` and fill in your values:
+
+```bash
+# Google OAuth Credentials
+GOOGLE_CLIENT_ID=your_client_id_here
+GOOGLE_CLIENT_SECRET=your_client_secret_here
+
+# Google Sheet ID (from sheet URL)
+PORTFOLIO_SHEET_ID=your_sheet_id_here
+
+# OpenRouter Configuration
+OPENROUTER_API_KEY=sk-or-v1-your-api-key-here
+LLM_MODEL=openai/gpt-3.5-turbo
+
+# Budget Limits
+BUDGET_LIMIT=5.0
+DAILY_LIMIT=0.25
+```
+
+### 5. Google Sheet Format
+
+Your Google Sheet should have these columns in order (A-D):
 
 | A: Activo | B: Plataforma | C: Moneda | D: Valor Original |
 |-----------|---------------|-----------|-------------------|
@@ -139,211 +189,26 @@ Your Google Sheet should have these columns:
 
 ## Usage
 
-### Running the Test
+### Interactive Mode (Recommended)
+
+Start a conversational session with the agent:
 
 ```bash
-# Activate virtual environment
-source .venv/bin/activate
-
-# Run test script
-python test/test_sheets_client.py
+python cli.py
 ```
 
-### First Run (OAuth Authentication)
-
-The first time you run the script:
-1. A browser window will open
-2. Sign in with your Google account
-3. Authorize the application
-4. The authentication token is saved locally (`token.json`)
-5. Future runs won't require re-authentication
-
-### Example Output
-
+**Example session:**
 ```
-Configuration OK
-Sheet ID: 1abc...xyz
+==============================================================
+  Colombian Portfolio Aggregator - AI Assistant
+==============================================================
 
-Successfully read X positions
+Interactive Mode - Ask questions about your portfolio
+Commands: 'exit' or 'quit' to exit, 'status' for budget, 'history' for usage
 
-Positions:
-  - Platform1: Asset Name 1
-    Value: XX,XXX.XX COP
-  - Platform2: Asset Name 2
-    Value: XXX,XXX.XX COP
-  - Platform3: Asset Name 3
-    Value: XX.XX USD
+You: Show me my portfolio
 
-Portfolio Summary:
-  Total positions: X
-  Platforms: Platform1, Platform2, Platform3
-  Currencies: COP, USD
-  
-  COP positions: $XXX,XXX.XX
-  USD positions: $XXX.XX
-  Total value (COP): $X,XXX,XXX.XX
+Assistant: Your portfolio has 7 positions with a total value of $969,813.84 COP.
+You're invested across 3 platforms: Trii (27.26%), Lulo (48.63%), and Dolar App (24.11%).
 
-Allocation by platform:
-  Platform1: XX.XX%
-  Platform2: XX.XX%
-  Platform3: XX.XX%
-
-Allocation by currency:
-  COP: XX.XX%
-  USD: XX.XX%
-```
-
-### Using in Code
-
-```python
-from mcp_servers.portfolio_sheets.sheets_client import SheetsClient
-
-# Initialize client
-client = SheetsClient()
-
-# Read positions
-positions = client.read_positions()
-
-# Or read complete portfolio
-portfolio = client.read_portfolio()
-
-# Get total value in COP
-total = portfolio.total_value()
-
-# Get allocation by platform
-allocation = portfolio.allocation_by_platform()
-```
-
-## Configuration
-
-### Environment Variables
-
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `GOOGLE_CLIENT_ID` | OAuth 2.0 Client ID | Yes |
-| `GOOGLE_CLIENT_SECRET` | OAuth 2.0 Client Secret | Yes |
-| `PORTFOLIO_SHEET_ID` | Google Sheet ID (from URL) | Yes |
-
-### Exchange Rates
-
-The system fetches **real-time USD/COP exchange rates** automatically using a free API (exchangerate-api.com).
-
-**Features:**
-- Automatic rate fetching on first use
-- 1-hour cache to minimize API calls
-- Fallback to default rate (4000) if API fails
-- Free tier: 1500 requests/month
-
-**Manual control:**
-```python
-# Use live rates (default)
-total = portfolio.total_value(use_live_rates=True)
-
-# Use default rate (4000 COP/USD)
-total = portfolio.total_value(use_live_rates=False)
-
-# Use custom rates
-total = portfolio.total_value(exchange_rates={"COP": 1.0, "USD": 3650.0})
-```
-
-## Development
-
-### Project Principles
-
-This project follows strict coding standards defined in `.cursorrules`:
-
-- **SOLID principles** for clean architecture
-- **No hardcoded values** - use environment variables
-- **Type hints** required for all functions
-- **Minimal comments** - code should be self-documenting
-- **Pydantic validation** for data integrity
-
-### Adding New Features
-
-Current architecture supports easy extension:
-
-1. **New data sources**: Implement additional sheet formats in `sheets_client.py`
-2. **New calculations**: Add methods to `Portfolio` class in `models/portfolio.py`
-3. **New platforms**: Automatically supported when added to Google Sheet
-
-## Roadmap
-
-### Completed (MVP - Phase 1)
-- [x] Google Sheets integration with OAuth
-- [x] Pydantic data models
-- [x] Colombian number format support
-- [x] Multi-platform aggregation
-- [x] Multi-currency support
-- [x] Portfolio calculations (total, allocations)
-- [x] Test script
-
-### Planned Features
-
-**Phase 2: MCP Server**
-- [ ] FastMCP server implementation
-- [ ] MCP tools for portfolio operations
-- [ ] Direct Python integration (no separate process)
-
-**Phase 3: CLI Interface**
-- [ ] Command-based CLI (no AI)
-- [ ] Interactive portfolio queries
-- [ ] Report generation
-
-**Phase 4: AI Integration**
-- [ ] LangChain agent setup
-- [ ] OpenRouter integration
-- [ ] Natural language queries
-- [ ] Investment insights
-
-**Phase 5: Advanced Features**
-- [ ] Real-time market data integration
-- [ ] Colombian tax calculations
-- [ ] Performance tracking over time
-- [ ] Portfolio rebalancing suggestions
-- [ ] CSV import/export
-
-## Troubleshooting
-
-### OAuth Errors
-
-**Error: "invalid_client"**
-- Ensure OAuth client type is "Desktop app"
-- Verify CLIENT_ID and CLIENT_SECRET are correct
-- Check that you're added as a test user in OAuth consent screen
-
-**Error: "Google Sheets API has not been used"**
-- Enable Google Sheets API in Google Cloud Console
-- Wait 1-2 minutes for activation to propagate
-
-### Data Reading Issues
-
-**No positions loaded**
-- Check Google Sheet tab name (should match code expectation)
-- Verify sheet has data in columns A-D
-- Ensure numbers are in correct format
-
-**Numbers not parsing**
-- Code supports: `60,000`, `60000`, `60,000.00`
-- Avoid currency symbols in the value column
-
-## Security
-
-- OAuth tokens stored locally in `token.json` (gitignored)
-- Never commit `.env` file with credentials
-- Read-only access to Google Sheets (can be upgraded if needed)
-- All sensitive data excluded from version control
-
-## License
-
-Personal project - Not for commercial use.
-
-## Author
-
-Built as a learning project for LangChain, MCP, and portfolio management.
-
-## Support
-
-For issues or questions, check:
-1. `test/test_sheets_client.py` - Example usage
-2. Error messages usually indicate the exact problem
-3. Google Cloud Console for API and OAuth settings
+You: What's my allocation by currency?
