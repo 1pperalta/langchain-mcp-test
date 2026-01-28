@@ -16,18 +16,18 @@ def test_agent():
     
     print("1. Checking configuration...")
     if not config.validate_google_credentials():
-        print("❌ Google credentials not configured!")
+        print("ERROR: Google credentials not configured!")
         return
     
     if not config.validate_sheet_id():
-        print("❌ Sheet ID not configured!")
+        print("ERROR: Sheet ID not configured!")
         return
     
     if not config.OPENROUTER_API_KEY:
-        print("❌ OpenRouter API key not configured!")
+        print("ERROR: OpenRouter API key not configured!")
         return
     
-    print("✓ Configuration OK\n")
+    print("Configuration OK\n")
     
     print("2. Initializing agent...")
     tracker = UsageTracker(
@@ -35,7 +35,7 @@ def test_agent():
         daily_limit=config.DAILY_LIMIT
     )
     agent = PortfolioAgent(tracker=tracker)
-    print("✓ Agent initialized\n")
+    print("Agent initialized\n")
     
     print("3. Testing simple query...")
     print("   Question: 'Show me a summary of my portfolio'\n")
@@ -55,10 +55,10 @@ def test_agent():
         print(f"   Remaining: ${status['total_remaining']:.4f}")
         print(f"   Status: {status['status']}")
         
-        print("\n✓ Test completed successfully!")
+        print("\nTest completed successfully!")
         
     except Exception as e:
-        print(f"\n❌ Test failed: {e}")
+        print(f"\nTest failed: {e}")
         raise
 
 

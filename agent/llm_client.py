@@ -91,11 +91,9 @@ def create_llm(
         openai_api_key=config.OPENROUTER_API_KEY,
         openai_api_base="https://openrouter.ai/api/v1",
         callbacks=callbacks,
-        model_kwargs={
-            "headers": {
-                "HTTP-Referer": "https://github.com/your-repo",
-                "X-Title": "Colombian Portfolio Aggregator"
-            }
+        default_headers={
+            "HTTP-Referer": "https://github.com/your-repo",
+            "X-Title": "Colombian Portfolio Aggregator"
         }
     )
     
