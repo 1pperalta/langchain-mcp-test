@@ -16,7 +16,11 @@ class Config:
     GOOGLE_CLIENT_ID: str = os.getenv('GOOGLE_CLIENT_ID', '')
     GOOGLE_CLIENT_SECRET: str = os.getenv('GOOGLE_CLIENT_SECRET', '')
     PORTFOLIO_SHEET_ID: str = os.getenv('PORTFOLIO_SHEET_ID', '')
-    
+    # Add after line 18 (after PORTFOLIO_SHEET_ID)
+    OPENROUTER_API_KEY: str = os.getenv('OPENROUTER_API_KEY', '')
+    LLM_MODEL: str = os.getenv('LLM_MODEL', 'openai/gpt-3.5-turbo')
+    BUDGET_LIMIT: float = float(os.getenv('BUDGET_LIMIT', '5.0'))
+    DAILY_LIMIT: float = float(os.getenv('DAILY_LIMIT', '0.25'))
     OPENROUTER_API_KEY: str = os.getenv('OPENROUTER_API_KEY', '')
     LLM_MODEL: str = os.getenv('LLM_MODEL', 'openai/gpt-3.5-turbo')
     
