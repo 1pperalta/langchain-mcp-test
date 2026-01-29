@@ -19,3 +19,7 @@ langchain-openai>=0.0.5
 
 # Utilities
 requests>=2.31.0
+
+
+# Market data
+yfinance>=0.2.0

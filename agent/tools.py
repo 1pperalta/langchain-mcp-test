@@ -53,6 +53,80 @@ By Currency:
 Current Exchange Rate: 1 USD = {exchange_rate:,.2f} COP
 """
         return summary
+
+    def get_etf_prices(self, _: str = "") -> str:
+        """
+        Get current market prices for ETFs in the portfolio.
+        Use this when user asks about current prices, P&L, or market performance.
+        """
+        from utils.market_data import get_multiple_etf_prices
+        
+        portfolio = self._get_portfolio()
+        
+        # Common ETF ticker mappings
+        ticker_mapping = {
+            'euro stoxx 50': 'STOXX50E',
+            'dow jones': 'DIA',
+            'etf euro stoxx 50': 'STOXX50E',
+            'etf dow jones us': 'DIA',
+        }
+        
+        # Find ETFs in portfolio
+        etf_positions = [
+            pos for pos in portfolio.positions 
+            if 'etf' in pos.symbol.lower() or pos.asset_type == 'etf'
+        ]
+        
+        if not etf_positions:
+            return "No ETF positions found in portfolio."
+        
+        # Map positions to tickers
+        tickers_to_fetch = []
+        position_ticker_map = {}
+        
+        for pos in etf_positions:
+            symbol_lower = pos.symbol.lower()
+            ticker = ticker_mapping.get(symbol_lower)
+            
+            if ticker:
+                tickers_to_fetch.append(ticker)
+                position_ticker_map[ticker] = pos
+        
+        if not tickers_to_fetch:
+            return "Could not identify ticker symbols for ETFs. Available ETFs: " + \
+                   ", ".join([pos.symbol for pos in etf_positions])
+        
+        # Fetch prices
+        prices = get_multiple_etf_prices(tickers_to_fetch)
+        
+        if not prices:
+            return "Failed to fetch ETF prices. Market may be closed or tickers incorrect."
+        
+        result = "Current ETF Prices:\n\n"
+        
+        for ticker, price_data in prices.items():
+            pos = position_ticker_map.get(ticker)
+            
+            result += f"{price_data['name']} ({ticker}):\n"
+            result += f"  Current Price: ${price_data['current_price']:.2f} {price_data['currency']}\n"
+            result += f"  Change: ${price_data['change']:.2f} ({price_data['change_percent']:.2f}%)\n"
+            
+            if pos and pos.quantity and pos.average_price:
+                from utils.market_data import calculate_position_pnl
+                pnl = calculate_position_pnl(
+                    pos.average_price,
+                    price_data['current_price'],
+                    pos.quantity,
+                    pos.currency
+                )
+                result += f"  Your Position: {pos.quantity:.2f} shares\n"
+                result += f"  Cost Basis: ${pnl['cost_basis']:.2f}\n"
+                result += f"  Current Value: ${pnl['current_value']:.2f}\n"
+                result += f"  P&L: ${pnl['unrealized_pnl']:.2f} ({pnl['pnl_percent']:.2f}%)\n"
+            
+            result += "\n"
+        
+        return result    
     
     def get_positions(self, platform: str = "") -> str:
         """
@@ -150,4 +224,12 @@ def create_portfolio_tools() -> list[Tool]:
             func=portfolio_tools.get_allocation_by_asset_type,
             description="Get portfolio allocation breakdown by asset type (stocks, ETFs, funds, cash). Use this when user asks about diversification."
         ),
+        Tool(
+            name="get_etf_prices",
+            func=portfolio_tools.get_etf_prices,
+            description="Get current market prices for ETFs in portfolio. Shows real-time prices, daily changes, and P&L if purchase data available. Use when user asks about ETF performance, current values, or profit/loss."
+        ),
     ]
+
+
+    
