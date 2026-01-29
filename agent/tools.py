@@ -192,6 +192,39 @@ Current Exchange Rate: 1 USD = {exchange_rate:,.2f} COP
             result += f"- {asset_type}: {percentage:.2f}%\n"
         
         return result
+    def research_market(self, query: str) -> str:
+        """
+        Research market information, news, or investment topics using web search.
+        
+        Args:
+            query: What to research (e.g., "Colombian investment platforms comparison")
+        
+        Returns:
+            Research results and insights
+        """
+        if not query:
+            return "Please provide a research query."
+        
+        # For now, provide guidance on what this would do
+        research_topics = {
+            'colombian platforms': 'Lulo vs Trii vs DollarApp comparison, fees, rates',
+            'usd cop': 'USD/COP exchange rate trends and forecasts',
+            'etf performance': 'Euro Stoxx 50 and Dow Jones recent performance',
+            'market news': 'Latest Colombian investment market news',
+        }
+        
+        result = f"Market Research: {query}\n\n"
+        result += "This tool would search for:\n"
+        
+        # Suggest relevant searches
+        for topic, description in research_topics.items():
+            if topic in query.lower():
+                result += f"- {description}\n"
+        
+        result += "\nNote: Web search MCP integration pending. "
+        result += "Manual implementation needed through Cursor's MCP system."
+        
+        return result   
 
 
 def create_portfolio_tools() -> list[Tool]:
@@ -228,6 +261,11 @@ def create_portfolio_tools() -> list[Tool]:
             name="get_etf_prices",
             func=portfolio_tools.get_etf_prices,
             description="Get current market prices for ETFs in portfolio. Shows real-time prices, daily changes, and P&L if purchase data available. Use when user asks about ETF performance, current values, or profit/loss."
+        ),
+        Tool(
+            name="research_market",
+            func=portfolio_tools.research_market,
+            description="Research market information, news, or investment topics using web search. Use when user asks about market trends, investment opportunities, or specific topics."
         ),
     ]
 
