@@ -22,6 +22,8 @@ This project provides an intelligent assistant for managing and analyzing person
 - Portfolio summary and analysis
 - Allocation breakdown by platform, currency, and asset type
 - Position filtering and search
+- Real-time ETF price tracking with yfinance
+- Daily performance monitoring
 - Budget tracking and cost management
 
 ### Budget Management
@@ -41,6 +43,7 @@ This project provides an intelligent assistant for managing and analyzing person
 - **Pydantic** - Data validation and modeling
 - **Google Sheets API** - Data source
 - **Google OAuth 2.0** - Secure authentication
+- **yfinance** - Real-time market data (free, no API key)
 
 ### Project Structure
 
@@ -59,11 +62,14 @@ langgraph-mcp-test/
 │   └── usage_tracker.py          # Budget tracking system
 ├── utils/
 │   ├── exchange_rates.py         # Real-time exchange rate utilities
+│   ├── market_data.py            # ETF price tracking with yfinance
+│   ├── mcp_integration.py        # External MCP integration (placeholder)
 │   └── __init__.py
 ├── test/
 │   ├── test_models.py            # Model tests
 │   ├── test_sheets_client.py     # Google Sheets integration tests
-│   └── test_agent.py             # Agent functionality tests
+│   ├── test_agent.py             # Agent functionality tests
+│   └── test_market_data.py       # ETF price integration tests
 ├── cli.py                        # Command-line interface
 ├── config.py                     # Configuration management
 ├── .env                          # Environment variables (not in git)
@@ -86,6 +92,7 @@ Tool Selection:
     - get_allocation_by_platform
     - get_allocation_by_currency
     - get_allocation_by_asset_type
+    - get_etf_prices (yfinance integration)
     ↓
 Tool Execution → Data from Google Sheets
     ↓
@@ -212,3 +219,6 @@ Assistant: Your portfolio has 7 positions with a total value of $969,813.84 COP.
 You're invested across 3 platforms: Trii (27.26%), Lulo (48.63%), and Dolar App (24.11%).
 
 You: What's my allocation by currency?
+
+
+You: How are my ETFs performing today?
