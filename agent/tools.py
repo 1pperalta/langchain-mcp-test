@@ -65,10 +65,10 @@ Current Exchange Rate: 1 USD = {exchange_rate:,.2f} COP
         
         # Common ETF ticker mappings
         ticker_mapping = {
-            'euro stoxx 50': 'STOXX50E',
-            'dow jones': 'DIA',
-            'etf euro stoxx 50': 'STOXX50E',
-            'etf dow jones us': 'DIA',
+        'euro stoxx 50': 'FEZ',        # Correct: iShares Euro Stoxx 50
+        'dow jones': 'DIA',
+        'etf euro stoxx 50': 'FEZ',    
+        'etf dow jones us': 'DIA',
         }
         
         # Find ETFs in portfolio
