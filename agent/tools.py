@@ -128,6 +128,42 @@ Current Exchange Rate: 1 USD = {exchange_rate:,.2f} COP
         
         return result    
     
+    def get_market_analysis(self, focus: str = "colombian") -> str:
+        """
+        Get current market analysis and indicators from trusted financial sources.
+        Use when user asks about market conditions, economic outlook, or investment climate.
+        
+        Args:
+            focus: Market focus - "colombian" for Colombian market data
+        
+        Returns:
+            Market summary with key indicators
+        """
+        from utils.firecrawl_client import get_colombian_market_summary
+        
+        if focus.lower() == "colombian" or not focus:
+            return get_colombian_market_summary()
+        else:
+            return f"Market analysis for '{focus}' not yet implemented. Currently supports: 'colombian'"
+        
+    def research_article(self, url: str) -> str:
+        """
+        Scrape and analyze a financial article from trusted sources.
+        Use when user provides a specific article URL to analyze.
+        
+        Args:
+            url: Article URL from trusted source (La República, Portafolio, Bloomberg, etc.)
+        
+        Returns:
+            Article content and analysis
+        """
+        from utils.firecrawl_client import scrape_financial_article
+        
+        if not url or not url.startswith('http'):
+            return "Please provide a valid article URL from a trusted source (larepublica.co, portafolio.co, bloomberg.com, etc.)"
+        
+        return scrape_financial_article(url)
+    
     def get_positions(self, platform: str = "") -> str:
         """
         Get list of all positions, optionally filtered by platform.
@@ -261,6 +297,16 @@ def create_portfolio_tools() -> list[Tool]:
             name="get_etf_prices",
             func=portfolio_tools.get_etf_prices,
             description="Get current market prices for ETFs in portfolio. Shows real-time prices, daily changes, and P&L if purchase data available. Use when user asks about ETF performance, current values, or profit/loss."
+        ),
+        Tool(
+            name="get_market_analysis",
+            func=portfolio_tools.get_market_analysis,
+            description="Get current market analysis and indicators from trusted financial sources. Use when user asks about market conditions, economic outlook, or investment climate. Input: market focus (optional, e.g., 'colombian') or empty string for general market analysis."
+        ),
+        Tool(
+            name="research_article",
+            func=portfolio_tools.research_article,
+            description="Scrape and analyze a financial article from trusted sources. Use when user provides a specific article URL to analyze. Input: article URL from trusted source (larepublica.co, portafolio.co, bloomberg.com, etc.)"
         ),
         Tool(
             name="research_market",

@@ -19,6 +19,7 @@ class Config:
     # Add after line 18 (after PORTFOLIO_SHEET_ID)
     OPENROUTER_API_KEY: str = os.getenv('OPENROUTER_API_KEY', '')
     LLM_MODEL: str = os.getenv('LLM_MODEL', 'openai/gpt-3.5-turbo')
+    FIRECRAWL_API_KEY: str = os.getenv('FIRECRAWL_API_KEY', '')
     BUDGET_LIMIT: float = float(os.getenv('BUDGET_LIMIT', '5.0'))
     DAILY_LIMIT: float = float(os.getenv('DAILY_LIMIT', '0.25'))
     OPENROUTER_API_KEY: str = os.getenv('OPENROUTER_API_KEY', '')
@@ -52,6 +53,11 @@ class Config:
         """
         from utils.exchange_rates import get_exchange_rates
         return get_exchange_rates(use_cache=use_cache)
+        
+    @classmethod
+    def validate_firecrawl_config(cls) -> bool:
+        """Check if Firecrawl API key is configured."""
+        return bool(cls.FIRECRAWL_API_KEY)
 
 
 config = Config()
