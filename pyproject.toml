@@ -1,0 +1,32 @@
+[project]
+name = "langgraph-mcp-test"
+version = "0.1.0"
+description = "AI-powered Colombian portfolio aggregator with LangChain and OpenRouter"
+authors = [
+    {name = "1pperalta", email = "pablo.peralta@upb.edu.co"}
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.7.2",
+    "google-auth>=2.27.0",
+    "google-auth-oauthlib>=1.2.0",
+    "google-auth-httplib2>=0.2.0",
+    "google-api-python-client>=2.116.0",
+    "mcp>=1.1.0",
+    "langchain>=0.1.0",
+    "langchain-openai>=0.0.5",
+    "langchain-community>=0.0.20",
+    "openai>=1.0.0",
+    "requests>=2.31.0",
+    "yfinance>=0.2.0",
+    "firecrawl-py>=0.0.16",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]

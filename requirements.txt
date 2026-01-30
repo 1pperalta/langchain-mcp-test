@@ -23,3 +23,6 @@ requests>=2.31.0
 
 # Market data
 yfinance>=0.2.0
+
+# Web scraping and content extraction
+firecrawl-py>=0.0.16
