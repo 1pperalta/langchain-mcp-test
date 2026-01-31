@@ -1,25 +1,14 @@
 """Main LangChain agent for portfolio analysis."""
 from typing import Optional
-from langchain.agents import AgentExecutor, create_react_agent
-from langchain.prompts import PromptTemplate
+from langchain.agents import create_react_agent, AgentExecutor
+from langchain_core.prompts import PromptTemplate
 from agent.llm_client import create_llm
 from agent.tools import create_portfolio_tools
 from agent.usage_tracker import UsageTracker
 from config import config
 
 
-AGENT_PROMPT = """You are a helpful financial assistant for a Colombian investment portfolio.
-
-You have access to tools to analyze the user's portfolio across multiple platforms (Lulo, Trii, Dolar App, etc.).
-
-When answering questions:
-1. Be concise and clear
-2. Use specific numbers and percentages
-3. Provide actionable insights when relevant
-4. Always use tools to get real data - don't make assumptions
-5. Format currency values clearly (COP vs USD)
-
-Answer the following questions as best you can. You have access to the following tools:
+REACT_PROMPT = PromptTemplate.from_template("""Answer the following questions as best you can. You have access to the following tools:
 
 {tools}
 
@@ -37,7 +26,7 @@ Final Answer: the final answer to the original input question
 Begin!
 
 Question: {input}
-Thought:{agent_scratchpad}"""
+Thought:{agent_scratchpad}""")
 
 
 class PortfolioAgent:
@@ -63,7 +52,7 @@ class PortfolioAgent:
         
         status = self.tracker.get_budget_status()
         if status['status'] in ['WARNING', 'CRITICAL']:
-            print(f"\n⚠️  Budget Alert: {status['status']}")
+            print(f"\nBudget Alert: {status['status']}")
             print(f"   Spent: ${status['total_spent']:.4f} / ${status['total_limit']:.2f}")
             print(f"   Remaining: ${status['total_remaining']:.4f}\n")
     
@@ -75,14 +64,7 @@ class PortfolioAgent:
             query_type=query_type
         )
         
-        prompt = PromptTemplate.from_template(AGENT_PROMPT)
-        
-        agent = create_react_agent(
-            llm=self.llm,
-            tools=self.tools,
-            prompt=prompt
-        )
-        
+        agent = create_react_agent(self.llm, self.tools, REACT_PROMPT)
         self.agent_executor = AgentExecutor(
             agent=agent,
             tools=self.tools,
