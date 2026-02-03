@@ -26,6 +26,14 @@ This project provides an intelligent assistant for managing and analyzing person
 - Daily performance monitoring
 - Budget tracking and cost management
 
+### Web Scraping with Firecrawl
+- Colombian market analysis from Portafolio.co
+- Financial article research from trusted sources
+- Supported sources:
+  - Colombian: larepublica.co, portafolio.co, eltiempo.com
+  - Global: bloomberg.com, reuters.com, finance.yahoo.com
+  - ETF Research: morningstar.com, seekingalpha.com
+
 ### Budget Management
 - Configurable spending limits (total and daily)
 - Automatic usage tracking in JSON format
@@ -38,17 +46,19 @@ This project provides an intelligent assistant for managing and analyzing person
 ### Tech Stack
 
 - **Python 3.11+**
-- **LangChain** - Agent orchestration and tool management
+- **uv** - Fast Python package manager
+- **LangChain** - Agent orchestration with `create_react_agent` and `AgentExecutor`
 - **OpenRouter** - LLM API access (supports multiple models)
 - **Pydantic** - Data validation and modeling
 - **Google Sheets API** - Data source
 - **Google OAuth 2.0** - Secure authentication
 - **yfinance** - Real-time market data (free, no API key)
+- **Firecrawl** - Web scraping for financial news and market data
 
 ### Project Structure
 
 ```
-langgraph-mcp-test/
+langchain-mcp-test/
 ├── models/
 │   └── portfolio.py              # Pydantic models for Position and Portfolio
 ├── mcp_servers/
@@ -63,6 +73,7 @@ langgraph-mcp-test/
 ├── utils/
 │   ├── exchange_rates.py         # Real-time exchange rate utilities
 │   ├── market_data.py            # ETF price tracking with yfinance
+│   ├── firecrawl_client.py       # Web scraping for financial sources
 │   ├── mcp_integration.py        # External MCP integration (placeholder)
 │   └── __init__.py
 ├── test/
@@ -82,19 +93,22 @@ langgraph-mcp-test/
 ```
 User Question (CLI)
     ↓
-PortfolioAgent (ReAct Pattern)
+PortfolioAgent (ReAct Pattern with create_react_agent + AgentExecutor)
     ↓
 LLM Decision (OpenRouter - gpt-3.5-turbo)
     ↓
 Tool Selection:
-    - get_portfolio_summary
-    - get_positions
-    - get_allocation_by_platform
-    - get_allocation_by_currency
-    - get_allocation_by_asset_type
-    - get_etf_prices (yfinance integration)
+    - get_portfolio_summary      → Google Sheets data
+    - get_positions              → Google Sheets data
+    - get_allocation_by_platform → Google Sheets data
+    - get_allocation_by_currency → Google Sheets data
+    - get_allocation_by_asset_type → Google Sheets data
+    - get_etf_prices             → yfinance API
+    - get_market_analysis        → Firecrawl (portafolio.co)
+    - research_article           → Firecrawl (trusted sources)
+    - research_market            → Web search (placeholder)
     ↓
-Tool Execution → Data from Google Sheets
+Tool Execution → Data Sources
     ↓
 LLM Analysis & Response
     ↓
@@ -104,7 +118,7 @@ Usage Tracking (JSON)
 ### Data Model
 
 **Position** - Represents a single investment:
-- `symbol`: Asset name (e.g., "Acciones Dinámico")
+- `symbol`: Asset name (e.g., "Acciones Dinamico")
 - `platform`: Platform name (e.g., "Lulo", "Trii", "Dolar App")
 - `currency`: Currency code ("COP" or "USD")
 - `value`: Total position value in original currency
@@ -121,18 +135,23 @@ Usage Tracking (JSON)
 - Python 3.11 or higher
 - Google Cloud account with Sheets API enabled
 - OpenRouter API account
+- Firecrawl API key (optional, for market analysis)
 
 ### 1. Clone and Install Dependencies
 
 ```bash
 # Navigate to project directory
-cd "/path/to/langgraph-mcp-test"
+cd "/path/to/langchain-mcp-test"
 
-# Create virtual environment
+# Install uv (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install dependencies with uv
+uv sync
+
+# Or with pip (alternative)
 python3 -m venv .venv
 source .venv/bin/activate
-
-# Install dependencies
 pip install -r requirements.txt
 ```
 
@@ -156,7 +175,14 @@ pip install -r requirements.txt
 4. Generate API key from [API Keys page](https://openrouter.ai/keys)
 5. Keep Auto Top-Up disabled for budget control
 
-### 4. Environment Configuration
+### 4. Firecrawl Setup (Optional)
+
+1. Go to [Firecrawl](https://firecrawl.dev/)
+2. Create an account
+3. Generate API key
+4. Add to your `.env` file
+
+### 5. Environment Configuration
 
 Copy `.env.example` to `.env` and fill in your values:
 
@@ -175,9 +201,12 @@ LLM_MODEL=openai/gpt-3.5-turbo
 # Budget Limits
 BUDGET_LIMIT=5.0
 DAILY_LIMIT=0.25
+
+# Firecrawl (for web scraping - optional)
+FIRECRAWL_API_KEY=your_firecrawl_api_key_here
 ```
 
-### 5. Google Sheet Format
+### 6. Google Sheet Format
 
 Your Google Sheet should have these columns in order (A-D):
 
@@ -201,24 +230,62 @@ Your Google Sheet should have these columns in order (A-D):
 Start a conversational session with the agent:
 
 ```bash
+uv run cli.py
+# Or with activated venv:
 python cli.py
 ```
 
-**Example session:**
+### Example Questions
+
+**Portfolio queries:**
+- "Show me my portfolio"
+- "What's my allocation by platform?"
+- "How much do I have in Lulo?"
+- "Show my USD positions"
+- "What's my currency exposure?"
+
+**Market data:**
+- "How are my ETFs performing today?"
+- "What's the current price of my ETFs?"
+
+**Market analysis (requires Firecrawl):**
+- "Give me a market analysis"
+- "What's the current Colombian market situation?"
+
+**Article research (requires Firecrawl):**
+- "Analyze this article: https://www.portafolio.co/economia/..."
+
+### CLI Options
+
+```bash
+# Interactive mode
+uv run cli.py
+
+# Single question
+uv run cli.py -q "Show my portfolio"
+
+# Check budget status
+uv run cli.py --status
+
+# View usage history
+uv run cli.py --history
+uv run cli.py --history --days 30
 ```
-==============================================================
-  Colombian Portfolio Aggregator - AI Assistant
-==============================================================
 
-Interactive Mode - Ask questions about your portfolio
-Commands: 'exit' or 'quit' to exit, 'status' for budget, 'history' for usage
+## Available Tools
 
-You: Show me my portfolio
+| Tool | Description | Data Source |
+|------|-------------|-------------|
+| `get_portfolio_summary` | Overall portfolio summary | Google Sheets |
+| `get_positions` | List positions (optional filter by platform) | Google Sheets |
+| `get_allocation_by_platform` | Allocation % by platform | Google Sheets |
+| `get_allocation_by_currency` | Allocation % by currency | Google Sheets |
+| `get_allocation_by_asset_type` | Allocation % by asset type | Google Sheets |
+| `get_etf_prices` | Real-time ETF prices and P&L | yfinance |
+| `get_market_analysis` | Colombian market indicators | Firecrawl |
+| `research_article` | Scrape financial articles | Firecrawl |
+| `research_market` | Market research (placeholder) | - |
 
-Assistant: Your portfolio has 7 positions with a total value of $969,813.84 COP.
-You're invested across 3 platforms: Trii (27.26%), Lulo (48.63%), and Dolar App (24.11%).
+## License
 
-You: What's my allocation by currency?
-
-
-You: How are my ETFs performing today?
+MIT License
