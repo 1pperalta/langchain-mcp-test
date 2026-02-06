@@ -1,6 +1,6 @@
 """Main LangChain agent for portfolio analysis."""
 from typing import Optional
-from langchain.agents import create_react_agent, AgentExecutor
+from langchain.agents import initialize_agent, AgentType
 from langchain_core.prompts import PromptTemplate
 from agent.llm_client import create_llm
 from agent.tools import create_portfolio_tools
@@ -64,10 +64,10 @@ class PortfolioAgent:
             query_type=query_type
         )
         
-        agent = create_react_agent(self.llm, self.tools, REACT_PROMPT)
-        self.agent_executor = AgentExecutor(
-            agent=agent,
+        self.agent_executor = initialize_agent(
             tools=self.tools,
+            llm=self.llm,
+            agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
             verbose=True,
             max_iterations=5,
             handle_parsing_errors=True
